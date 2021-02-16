@@ -4,11 +4,15 @@ defmodule Furlex.Oembed do
   """
 
   use GenServer
-  use HTTPoison.Base
-
-  require Logger
+  use Tesla
 
   @json_library Application.get_env(:furlex, :json_library, Jason)
+  @timeout Application.get_env(:furlex, :timeout, 30_000)
+
+  plug(Tesla.Middleware.BaseUrl, oembed_host())
+  plug(Tesla.Middleware.Timeout, timeout: @timeout)
+
+  require Logger
 
   @doc """
   Fetches the list of Oembed providers
@@ -20,8 +24,9 @@ defmodule Furlex.Oembed do
   def fetch_providers(type \\ :soft)
 
   def fetch_providers(:hard) do
-    case get("/providers.json") do
+    case get("/providers.json", opts: [adapter: [timeout: @timeout]]) do
       {:ok, %{body: providers}} ->
+        providers = @json_library.decode!(providers)
         GenServer.cast(__MODULE__, {:providers, providers})
         {:ok, providers}
 
@@ -106,17 +111,6 @@ defmodule Furlex.Oembed do
 
   def handle_cast({:providers, providers}, _) do
     {:noreply, providers}
-  end
-
-  def process_url(path) do
-    oembed_host() <> path
-  end
-
-  def process_response_body(body) do
-    case @json_library.decode(body) do
-      {:ok, body} -> body
-      _error -> body
-    end
   end
 
   defp config(key) do
