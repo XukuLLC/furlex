@@ -3,13 +3,13 @@ defmodule Furlex.Parser.JsonLD do
 
   @json_library Application.get_env(:furlex, :json_library, Jason)
 
-  @spec parse(String.t()) :: nil | {:ok, List.t()}
+  @spec parse(String.t()) :: {:ok, List.t()}
   def parse(html) do
     meta = "script[type=\"application/ld+json\"]"
 
     with {:ok, document} <- Floki.parse_document(html) do
       case Floki.find(document, meta) do
-        nil ->
+        [] ->
           {:ok, []}
 
         elements ->
@@ -27,5 +27,19 @@ defmodule Furlex.Parser.JsonLD do
     element
     |> Floki.text(js: true)
     |> @json_library.decode!()
+    |> decode_html_entities()
+  end
+
+  defp decode_html_entities(result) when is_list(result) do
+    Enum.map(result, &decode_html_entities/1)
+  end
+
+  defp decode_html_entities(result) do
+    result
+    |> Enum.map(fn
+      {k, v} when is_binary(v) -> {k, HtmlEntities.decode(v)}
+      res -> res
+    end)
+    |> Enum.into(%{})
   end
 end
