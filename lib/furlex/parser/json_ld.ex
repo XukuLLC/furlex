@@ -34,12 +34,22 @@ defmodule Furlex.Parser.JsonLD do
     Enum.map(result, &decode_html_entities/1)
   end
 
-  defp decode_html_entities(result) do
+  defp decode_html_entities(result) when is_map(result) do
     result
     |> Enum.map(fn
-      {k, v} when is_binary(v) -> {k, HtmlEntities.decode(v)}
-      res -> res
+      {k, v} when is_binary(v) ->
+        {k, HtmlEntities.decode(v)}
+
+      {k, v} when is_list(v) ->
+        {k, decode_html_entities(v)}
+
+      res ->
+        res
     end)
     |> Enum.into(%{})
+  end
+
+  defp decode_html_entities(result) do
+    HtmlEntities.decode(result)
   end
 end
