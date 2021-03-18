@@ -67,6 +67,19 @@ defmodule Furlex do
     end
   end
 
+  @spec unfurl_by_html(String.t()) :: {:error, :parse_error} | {:ok, Furlex.t()}
+  def unfurl_by_html(html) do
+    with {:ok, results} <- parse(html) do
+      {:ok,
+       %__MODULE__{
+         facebook: results.facebook,
+         twitter: results.twitter,
+         json_ld: results.json_ld,
+         other: results.other
+       }}
+    end
+  end
+
   defp fetch(url, opts) do
     fetch = Task.async(Fetcher, :fetch, [url, opts])
     fetch_oembed = Task.async(Fetcher, :fetch_oembed, [url, opts])
