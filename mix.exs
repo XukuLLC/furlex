@@ -35,7 +35,7 @@ defmodule Furlex.Mixfile do
     [
       {:floki, "~> 0.30.0"},
       {:jason, "~> 1.0", optional: true},
-      {:plug_cowboy, "~> 2.4.1"},
+      {:plug_cowboy, "~> 2.5.0"},
       {:benchee, "~> 1.0.1", only: :dev},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:bypass, "~> 2.1.0", only: :test},
