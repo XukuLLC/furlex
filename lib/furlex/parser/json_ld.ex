@@ -24,10 +24,10 @@ defmodule Furlex.Parser.JsonLD do
   end
 
   defp decode(element) do
-    element
-    |> Floki.text(js: true)
-    |> @json_library.decode!()
-    |> decode_html_entities()
+    case element |> Floki.text(js: true) |> @json_library.decode() do
+      {:ok, json} -> json |> decode_html_entities()
+      {:error, _} -> []
+    end
   end
 
   defp decode_html_entities(result) when is_list(result) do
