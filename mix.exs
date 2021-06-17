@@ -33,7 +33,7 @@ defmodule Furlex.Mixfile do
 
   defp deps do
     [
-      {:floki, "~> 0.30.0"},
+      {:floki, "~> 0.31.0"},
       {:jason, "~> 1.0", optional: true},
       {:plug_cowboy, "~> 2.5.0"},
       {:benchee, "~> 1.0.1", only: :dev},
