@@ -33,11 +33,11 @@ defmodule Furlex.Mixfile do
 
   defp deps do
     [
-      {:floki, "~> 0.32.0"},
+      {:floki, "~> 0.33.0"},
       {:jason, "~> 1.0", optional: true},
       {:plug, "~> 1.13"},
       # {:plug_cowboy, github: "elixir-plug/plug", branch: "master", override: true},
-      {:benchee, "~> 1.0.1", only: :dev},
+      {:benchee, "~> 1.1.0", only: :dev},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:bypass, "~> 2.1.0", only: :test},
       {:tesla, "~> 1.4.0"}
