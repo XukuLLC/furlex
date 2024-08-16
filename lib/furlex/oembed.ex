@@ -6,8 +6,8 @@ defmodule Furlex.Oembed do
   use GenServer
   use Tesla
 
-  @json_library Application.get_env(:furlex, :json_library, Jason)
-  @timeout Application.get_env(:furlex, :timeout, 30_000)
+  @json_library Application.compile_env(:furlex, :json_library, Jason)
+  @timeout Application.compile_env(:furlex, :timeout, 30_000)
 
   plug(Tesla.Middleware.BaseUrl, oembed_host())
   plug(Tesla.Middleware.Timeout, timeout: @timeout)

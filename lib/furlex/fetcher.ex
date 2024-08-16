@@ -7,8 +7,8 @@ defmodule Furlex.Fetcher do
 
   alias Furlex.Oembed
 
-  @json_library Application.get_env(:furlex, :json_library, Jason)
-  @timeout Application.get_env(:furlex, :timeout, 30_000)
+  @json_library Application.compile_env(:furlex, :json_library, Jason)
+  @timeout Application.compile_env(:furlex, :timeout, 30_000)
 
   use Tesla
 
@@ -22,9 +22,13 @@ defmodule Furlex.Fetcher do
   def fetch(url, opts \\ []) do
     opts = Keyword.merge(opts, adapter: [timeout: timeout(opts)])
 
-    case get(url, opts: opts) do
-      {:ok, %{body: body, status: status_code}} -> {:ok, body, status_code}
-      other -> other
+    try do
+      with {:ok, %{body: body, status: status_code}} <- get(url, opts: opts) do
+        {:ok, body, status_code}
+      end
+    rescue
+      # Return error tuple
+      err -> {:error, Exception.message(err)} || {:error, :unknown}
     end
   end
 
