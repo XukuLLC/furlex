@@ -1,8 +1,8 @@
 defmodule Furlex.Parser.JsonLD do
   @behaviour Furlex.Parser
 
-  @json_library Application.get_env(:furlex, :json_library, Jason)
-  
+  @json_library Application.compile_env(:furlex, :json_library, Jason)
+
   alias HtmlEntities
 
   @spec parse(String.t()) :: {:ok, List.t()}
