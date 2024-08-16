@@ -40,7 +40,7 @@ defmodule Furlex.Mixfile do
       {:benchee, "~> 1.3.0", only: :dev},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:bypass, "~> 2.1.0", only: :test},
-      {:tesla, "~> 1.11.0"},
+      {:tesla, "~> 1.12.0"},
       {:html_entities, "~> 0.5"}
     ]
   end
