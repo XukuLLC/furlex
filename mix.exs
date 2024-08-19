@@ -40,7 +40,9 @@ defmodule Furlex.Mixfile do
       {:benchee, "~> 1.3.0", only: :dev},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:bypass, "~> 2.1.0", only: :test},
-      {:tesla, "~> 1.12.0"},
+      {:tesla, "~> 1.12",
+       github: "crova/tesla",
+       branch: "issue-#450-mint-reduce-response-doesnt-handle-all-possible-responses"},
       {:html_entities, "~> 0.5"}
     ]
   end
