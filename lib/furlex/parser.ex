@@ -38,7 +38,9 @@ defmodule Furlex.Parser do
   end
 
   @doc "Extracts a canonical url from the given raw HTML"
-  @spec extract_canonical(String.t()) :: nil | String.t()
+  @spec extract_canonical(String.t() | nil) :: nil | String.t()
+  def extract_canonical(nil = _html), do: nil
+
   def extract_canonical(html) do
     with {:ok, document} <- Floki.parse_document(html) do
       case Floki.find(document, "link[rel=\"canonical\"]") do
