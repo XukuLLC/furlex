@@ -5,7 +5,9 @@ defmodule Furlex.Parser.JsonLD do
 
   alias HtmlEntities
 
-  @spec parse(String.t()) :: {:ok, List.t()}
+  @spec parse(String.t() | nil) :: {:ok, List.t()}
+  def parse(nil = _html), do: {:ok, []}
+
   def parse(html) do
     meta = "script[type=\"application/ld+json\"]"
 
