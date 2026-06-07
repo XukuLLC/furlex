@@ -1,4 +1,6 @@
 defmodule Furlex.Parser.Twitter do
+  @moduledoc false
+
   @behaviour Furlex.Parser
 
   alias Furlex.Parser
@@ -13,7 +15,7 @@ defmodule Furlex.Parser.Twitter do
     twitter:app:url:googleplay twitter:app:id:googleplay
   )
 
-  @spec parse(String.t() | nil) :: {:ok, Map.t()}
+  @spec parse(String.t() | nil) :: {:ok, map()}
   def parse(nil = _html), do: {:ok, %{}}
 
   def parse(html) do

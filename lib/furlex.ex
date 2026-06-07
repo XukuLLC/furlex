@@ -23,12 +23,12 @@ defmodule Furlex do
 
   @type t :: %__MODULE__{
           canonical_url: String.t(),
-          oembed: nil | Map.t(),
-          facebook: Map.t(),
-          twitter: Map.t(),
-          json_ld: List.t(),
-          other: Map.t(),
-          status_code: Integer.t()
+          facebook: map(),
+          json_ld: list(),
+          oembed: nil | map(),
+          other: map(),
+          status_code: integer(),
+          twitter: map()
         }
 
   @doc false
@@ -48,9 +48,10 @@ defmodule Furlex do
   unfurl/1 fetches oembed data if applicable to the given url's host,
   in addition to Twitter Card, Open Graph, JSON-LD and other HTML meta tags.
 
-  unfurl/2 also accepts a keyword list that will be passed to HTTPoison.
+  unfurl/2 also accepts a keyword list that will be passed to Req.
   """
-  @spec unfurl(String.t(), Keyword.t()) :: {:ok, __MODULE__.t()} | {:error, Atom.t()}
+  @spec unfurl(String.t(), Keyword.t()) ::
+          {:ok, __MODULE__.t()} | {:error, :fetch_error | :parse_error}
   def unfurl(url, opts \\ []) do
     with {:ok, {body, status_code}, oembed} <- fetch(url, opts),
          {:ok, results} <- parse(body) do

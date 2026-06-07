@@ -1,39 +1,32 @@
 defmodule Furlex.Parser do
+  @moduledoc false
+
   @doc """
   Parses the given HTML, returning a map structure of structured
   data keys mapping to their respective values, or an error.
   """
-  @callback parse(html :: String.t()) :: {:ok, Map.t()} | {:error, Atom.t()}
+  @callback parse(html :: String.t()) :: {:ok, term()} | {:error, atom()}
 
   @doc """
   Extracts the given tags from the given raw html according to
   the given match function
   """
-  @spec extract(List.t() | String.t(), String.t(), Function.t()) :: Map.t()
+  @spec extract(list() | String.t(), String.t(), function()) :: map()
   def extract(tags, html, match) when is_list(tags) do
     tags
     |> Stream.map(&extract(&1, html, match))
-    |> Enum.reject(fn {_, v} -> is_nil(v) end)
+    |> Enum.reject(fn
+      nil -> true
+      {_, v} -> is_nil(v)
+    end)
     |> Map.new()
     |> group_keys()
   end
 
   def extract(tag, html, match) do
-    with {:ok, document} <- Floki.parse_document(html) do
-      case Floki.find(document, match.(tag)) do
-        nil ->
-          nil
-
-        elements ->
-          content =
-            case do_extract_content(elements) do
-              [] -> nil
-              [element] -> element
-              content -> content
-            end
-
-          {tag, content}
-      end
+    case Floki.parse_document(html) do
+      {:ok, document} -> extract_from_document(tag, document, match)
+      _ -> nil
     end
   end
 
@@ -75,7 +68,7 @@ defmodule Furlex.Parser do
       }
     }
   """
-  @spec group_keys(Map.t()) :: Map.t()
+  @spec group_keys(map()) :: map()
   def group_keys(map)
 
   def group_keys(map) do
@@ -105,7 +98,7 @@ defmodule Furlex.Parser do
     Map.merge(left, right, &deep_resolve/3)
   end
 
-  defp deep_resolve(_key, left = %{}, right = %{}) do
+  defp deep_resolve(_key, %{} = left, %{} = right) do
     deep_merge(left, right)
   end
 
@@ -119,5 +112,23 @@ defmodule Furlex.Parser do
       |> Floki.attribute("content")
       |> Enum.at(0)
     end)
+  end
+
+  defp extract_from_document(tag, document, match) do
+    case Floki.find(document, match.(tag)) do
+      [] ->
+        nil
+
+      elements ->
+        {tag, extract_content(elements)}
+    end
+  end
+
+  defp extract_content(elements) do
+    case do_extract_content(elements) do
+      [] -> nil
+      [element] -> element
+      content -> content
+    end
   end
 end

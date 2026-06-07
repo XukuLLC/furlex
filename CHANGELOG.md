@@ -1,5 +1,11 @@
 # Changelog
 
+## v.0.5.0
+* Replace Tesla with Req for HTTP fetching and remove stale HTTP client lockfile entries.
+* Require Elixir 1.20 / OTP 29 and update local tool versions.
+* Add Quokka formatting, Credo, Dialyzer, a `mix check` alias, and GitHub Actions CI.
+* Fix typespecs and parser branches flagged by Dialyzer.
+
 ## v.0.4.3
 * Relaxes cowboy dependency ([abitdodgy](https://github.com/abitdodgy))
 

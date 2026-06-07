@@ -1,15 +1,17 @@
 defmodule Furlex.Parser.HTML do
+  @moduledoc false
+
   @behaviour Furlex.Parser
 
   alias Furlex.Parser.{Facebook, Twitter}
 
-  @spec parse(String.t() | nil) :: nil | {:ok, Map.t()}
+  @spec parse(String.t() | nil) :: {:ok, map()}
   def parse(nil = _html), do: {:ok, %{}}
 
   def parse(html) do
     with {:ok, document} <- Floki.parse_document(html) do
       case Floki.find(document, "meta[name]") do
-        nil ->
+        [] ->
           {:ok, %{}}
 
         elements ->

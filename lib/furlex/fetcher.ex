@@ -3,53 +3,37 @@ defmodule Furlex.Fetcher do
   A module for fetching body data for a given url
   """
 
-  require Logger
-
   alias Furlex.Oembed
+
+  require Logger
 
   @json_library Application.compile_env(:furlex, :json_library, Jason)
   @timeout Application.compile_env(:furlex, :timeout, 30_000)
 
-  use Tesla
-
-  plug(Tesla.Middleware.Timeout, timeout: @timeout)
-  plug(Tesla.Middleware.FollowRedirects)
-
   @doc """
   Fetches a url and extracts the body
   """
-  @spec fetch(String.t(), List.t()) :: {:ok, String.t(), Integer.t()} | {:error, Atom.t()}
+  @spec fetch(String.t(), Keyword.t()) :: {:ok, String.t(), non_neg_integer()} | {:error, term()}
   def fetch(url, opts \\ []) do
-    opts = Keyword.merge(opts, adapter: [timeout: timeout(opts)])
-
-    try do
-      with {:ok, %{body: body, status: status_code}} <- get(url, opts: opts) do
+    case Req.get(url, req_options(opts)) do
+      {:ok, %Req.Response{body: body, status: status_code}} ->
         {:ok, body, status_code}
-      end
-    rescue
-      # Return error tuple
-      err -> {:error, Exception.message(err)} || {:error, :unknown}
-    end
-  end
 
-  defp timeout(opts) do
-    if timeout_from_opts = Keyword.get(opts, :timeout) do
-      timeout_from_opts
-    else
-      @timeout
+      {:error, reason} ->
+        {:error, normalize_error(reason)}
     end
   end
 
   @doc """
   Fetches oembed data for the given url
   """
-  @spec fetch_oembed(String.t(), List.t()) :: {:ok, String.t()} | {:ok, nil} | {:error, Atom.t()}
+  @spec fetch_oembed(String.t(), Keyword.t()) :: {:ok, map() | list() | nil}
   def fetch_oembed(url, opts \\ []) do
     with {:ok, endpoint} <- Oembed.endpoint_from_url(url),
          params = %{"url" => url},
          opts = Keyword.put(opts, :params, params),
-         {:ok, response} <- get(endpoint, opts),
-         {:ok, body} <- @json_library.decode(response.body) do
+         {:ok, %Req.Response{body: response_body}} <- Req.get(endpoint, req_options(opts)),
+         {:ok, body} <- decode_json(response_body) do
       {:ok, body}
     else
       {:error, :no_oembed_provider} ->
@@ -62,4 +46,26 @@ defmodule Furlex.Fetcher do
         {:ok, nil}
     end
   end
+
+  defp req_options(opts) do
+    timeout = Keyword.get(opts, :timeout, @timeout)
+
+    connect_options =
+      opts |> Keyword.get(:connect_options, []) |> Keyword.put_new(:timeout, timeout)
+
+    opts
+    |> Keyword.delete(:timeout)
+    |> Keyword.put_new(:redirect, true)
+    |> Keyword.put_new(:retry, false)
+    |> Keyword.put_new(:receive_timeout, timeout)
+    |> Keyword.put(:connect_options, connect_options)
+  end
+
+  defp decode_json(body) when is_binary(body), do: @json_library.decode(body)
+  defp decode_json(body) when is_list(body) or is_map(body), do: {:ok, body}
+  defp decode_json(body), do: {:error, {:invalid_json_body, body}}
+
+  defp normalize_error(%{reason: reason}) when is_atom(reason), do: reason
+  defp normalize_error(exception) when is_exception(exception), do: Exception.message(exception)
+  defp normalize_error(reason), do: reason
 end

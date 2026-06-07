@@ -1,21 +1,34 @@
-defmodule Furlex.Mixfile do
+defmodule Furlex.MixProject do
   use Mix.Project
+
+  @version "0.5.0"
+  @source_url "https://github.com/XukuLLC/furlex"
 
   def project do
     [
       app: :furlex,
-      version: "0.4.3",
-      elixir: "~> 1.4",
-      build_embedded: Mix.env() == :prod,
-      start_permanent: Mix.env() == :prod,
+      version: @version,
+      elixir: "~> 1.20",
       description: description(),
       package: package(),
       deps: deps(),
       name: "Furlex",
-      source_url: "https://github.com/claytongentry/furlex",
+      source_url: @source_url,
+      aliases: aliases(),
       docs: [
         main: "Furlex",
+        source_ref: "v#{@version}",
+        source_url: @source_url,
         extras: ~w(README.md CHANGELOG.md)
+      ]
+    ]
+  end
+
+  def cli do
+    [
+      preferred_envs: [
+        check: :test,
+        "test.watch": :test
       ]
     ]
   end
@@ -36,12 +49,15 @@ defmodule Furlex.Mixfile do
       {:floki, "~> 0.36.0"},
       {:jason, "~> 1.4", optional: true},
       {:plug, "~> 1.16"},
-      # {:plug_cowboy, github: "elixir-plug/plug", branch: "master", override: true},
-      {:benchee, "~> 1.3.0", only: :dev},
-      {:ex_doc, "~> 0.19", only: :dev, runtime: false},
+      {:req, "~> 0.5"},
+      {:benchee, "~> 1.3", only: :dev},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
+      {:ex_doc, "~> 0.40", only: :dev, runtime: false},
       {:bypass, "~> 2.1.0", only: :test},
-      {:tesla, "~> 1.12.0"},
-      {:html_entities, "~> 0.5"}
+      {:html_entities, "~> 0.5"},
+      {:mix_test_watch, "~> 1.4", only: :dev, runtime: false},
+      {:quokka, "~> 2.12", only: [:dev, :test], runtime: false}
     ]
   end
 
@@ -58,12 +74,24 @@ defmodule Furlex.Mixfile do
     [
       name: :furlex,
       files: ~w(doc lib mix.exs README.md LICENSE.md CHANGELOG.md),
-      maintainers: ["Clayton Gentry"],
+      maintainers: ["Neil Berkman"],
       licenses: ["Apache 2.0"],
       links: %{
-        "Github" => "http://github.com/claytongentry/furlex",
-        "Docs" => "http://hexdocs.pm/furlex"
+        "GitHub" => @source_url,
+        "Docs" => "https://hexdocs.pm/furlex"
       }
+    ]
+  end
+
+  defp aliases do
+    [
+      check: [
+        "format --check-formatted",
+        "compile --warnings-as-errors",
+        "credo --strict",
+        "dialyzer --format short",
+        "test"
+      ]
     ]
   end
 end
