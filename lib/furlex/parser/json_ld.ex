@@ -1,11 +1,13 @@
 defmodule Furlex.Parser.JsonLD do
-  @behaviour Furlex.Parser
+  @moduledoc false
 
-  @json_library Application.compile_env(:furlex, :json_library, Jason)
+  @behaviour Furlex.Parser
 
   alias HtmlEntities
 
-  @spec parse(String.t() | nil) :: {:ok, List.t()}
+  @json_library Application.compile_env(:furlex, :json_library, Jason)
+
+  @spec parse(String.t() | nil) :: {:ok, list()}
   def parse(nil = _html), do: {:ok, []}
 
   def parse(html) do
@@ -28,7 +30,10 @@ defmodule Furlex.Parser.JsonLD do
   end
 
   defp decode(element) do
-    case element |> Floki.text(js: true) |> @json_library.decode() do
+    element
+    |> Floki.text(js: true)
+    |> @json_library.decode()
+    |> case do
       {:ok, json} -> json |> decode_html_entities()
       {:error, _} -> []
     end
@@ -40,11 +45,10 @@ defmodule Furlex.Parser.JsonLD do
 
   defp decode_html_entities(result) when is_map(result) do
     result
-    |> Enum.map(fn
+    |> Map.new(fn
       {k, v} ->
         {k, decode_html_entities(v)}
     end)
-    |> Enum.into(%{})
   end
 
   defp decode_html_entities(result) do

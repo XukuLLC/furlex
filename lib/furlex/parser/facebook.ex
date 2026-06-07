@@ -1,4 +1,6 @@
 defmodule Furlex.Parser.Facebook do
+  @moduledoc false
+
   @behaviour Furlex.Parser
 
   alias Furlex.Parser
@@ -27,7 +29,7 @@ defmodule Furlex.Parser.Facebook do
     video:release_date video:tag video:writer video:series
   )
 
-  @spec parse(String.t() | nil) :: {:ok, Map.t()}
+  @spec parse(String.t() | nil) :: {:ok, map()}
   def parse(nil = _html), do: {:ok, %{}}
 
   def parse(html) do

@@ -4,15 +4,11 @@ defmodule Furlex.Oembed do
   """
 
   use GenServer
-  use Tesla
+
+  require Logger
 
   @json_library Application.compile_env(:furlex, :json_library, Jason)
   @timeout Application.compile_env(:furlex, :timeout, 30_000)
-
-  plug(Tesla.Middleware.BaseUrl, oembed_host())
-  plug(Tesla.Middleware.Timeout, timeout: @timeout)
-
-  require Logger
 
   @doc """
   Fetches the list of Oembed providers
@@ -20,15 +16,21 @@ defmodule Furlex.Oembed do
   Soft fetch will fetch cached providers. Hard fetch requests
   providers from oembed.com and purges the cache.
   """
-  @spec fetch_providers(Atom.t()) :: {:ok, List.t()} | {:error, Atom.t()}
+  @spec fetch_providers(atom()) :: {:ok, list()} | {:error, atom()}
   def fetch_providers(type \\ :soft)
 
   def fetch_providers(:hard) do
-    case get("/providers.json", opts: [adapter: [timeout: @timeout]]) do
-      {:ok, %{body: providers}} ->
-        providers = @json_library.decode!(providers)
-        GenServer.cast(__MODULE__, {:providers, providers})
-        {:ok, providers}
+    case Req.get(oembed_url("/providers.json"), req_options()) do
+      {:ok, %Req.Response{body: body}} ->
+        case decode_json(body) do
+          {:ok, providers} ->
+            GenServer.cast(__MODULE__, {:providers, providers})
+            {:ok, providers}
+
+          other ->
+            Logger.error("Could not decode providers: #{inspect(other)}")
+            {:error, :fetch_error}
+        end
 
       other ->
         Logger.error("Could not fetch providers: #{inspect(other)}")
@@ -54,7 +56,7 @@ defmodule Furlex.Oembed do
     iex> Oembed.endpoint_from_url "https://vimeo.com/88856141", %{"format" => "xml"}
     {:ok, "https://vimeo.com/api/oembed.xml"}
   """
-  @spec endpoint_from_url(String.t(), Map.t()) :: {:ok, String.t()} | {:error, Atom.t()}
+  @spec endpoint_from_url(String.t(), map(), Keyword.t()) :: {:ok, String.t()} | {:error, atom()}
   def endpoint_from_url(url, params \\ %{"format" => "json"}, opts \\ []) do
     case provider_from_url(url, opts) do
       nil ->
@@ -122,4 +124,18 @@ defmodule Furlex.Oembed do
   defp oembed_host do
     config(:oembed_host) || "https://oembed.com"
   end
+
+  defp oembed_url(path), do: URI.merge(oembed_host(), path) |> URI.to_string()
+
+  defp req_options do
+    [
+      connect_options: [timeout: @timeout],
+      retry: false,
+      receive_timeout: @timeout
+    ]
+  end
+
+  defp decode_json(body) when is_binary(body), do: @json_library.decode(body)
+  defp decode_json(body) when is_list(body) or is_map(body), do: {:ok, body}
+  defp decode_json(body), do: {:error, {:invalid_json_body, body}}
 end
